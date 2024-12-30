@@ -25,33 +25,35 @@ const HomePage: React.FC = () => {
         alignItems: "center",
       }}
     >
-      <Space size={"middle"} direction="vertical" align="center">
-        <h2>Prueba de Ant Design y Redux Toolkit</h2>
+      <>
+        <Space size={"middle"} direction="vertical" align="center">
+          <h2>Prueba de Ant Design y Redux Toolkit</h2>
 
-        <h4>Número de identificación Usuario: {idNumberUserState}</h4>
+          <h4>Número de identificación Usuario: {idNumberUserState}</h4>
 
-        <Space size={"middle"}>
-          <CustomButton
-            titleCustomButton="Reducir"
-            typeCustomButton="primary"
-            sizeCustomButton="middle"
-            styleCustomButton={{ backgroundColor: "red" }}
-            onClickCustomButton={() => {
-              dispatch(setIdNumberUser((idNumberUserState -= 1)));
-            }}
-          />
+          <Space size={"middle"}>
+            <CustomButton
+              titleCustomButton="Reducir"
+              typeCustomButton="primary"
+              sizeCustomButton="middle"
+              styleCustomButton={{ backgroundColor: "red" }}
+              onClickCustomButton={() => {
+                dispatch(setIdNumberUser((idNumberUserState -= 1)));
+              }}
+            />
 
-          <CustomButton
-            titleCustomButton="Aumentar"
-            typeCustomButton="primary"
-            sizeCustomButton="middle"
-            styleCustomButton={{ backgroundColor: "green" }}
-            onClickCustomButton={() => {
-              dispatch(setIdNumberUser((idNumberUserState += 1)));
-            }}
-          />
+            <CustomButton
+              titleCustomButton="Aumentar"
+              typeCustomButton="primary"
+              sizeCustomButton="middle"
+              styleCustomButton={{ backgroundColor: "green" }}
+              onClickCustomButton={() => {
+                dispatch(setIdNumberUser((idNumberUserState += 1)));
+              }}
+            />
+          </Space>
         </Space>
-      </Space>
+      </>
     </div>
   );
 };
