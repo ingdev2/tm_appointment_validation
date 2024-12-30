@@ -12,8 +12,9 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Fénix",
-  description: "Software de Clínica Bonnadona",
+  title: "Validación citas TM",
+  description:
+    "Validación de que estén presentes en ambos sistemas las citas agendadas del día, con 2 archivos de Excel.",
   icons: {
     icon: "/favicon.ico",
   },
