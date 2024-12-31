@@ -13,8 +13,8 @@ interface IExcelRowsHosvital {
 }
 
 interface IExcelRowsCoco {
-  'Tipo documento': string;
-  'Número de Identificación': string;
+  "Tipo documento": string;
+  "Número de Identificación": string;
   Servicio: string;
-  'Fecha de la Cita': string;
+  "Fecha de la Cita": string;
 }

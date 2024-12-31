@@ -3,6 +3,7 @@ import {
   Controller,
   FileTypeValidator,
   Get,
+  HttpException,
   HttpStatus,
   MaxFileSizeValidator,
   Param,
@@ -22,7 +23,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 @ApiBearerAuth()
 @Controller('upload-files')
 export class UploadFilesController {
-  constructor(private usersService: UploadFilesService) {}
+  constructor(private uploadFilesService: UploadFilesService) {}
 
   // POST METHODS //
 
@@ -35,7 +36,8 @@ export class UploadFilesController {
       new ParseFilePipe({
         validators: [
           new FileTypeValidator({
-            fileType: process.env.FILE_TYPES_ALLOWED,
+            fileType:
+              /^(application\/vnd\.ms\-excel|application\/vnd\.openxmlformats\-officedocument\.spreadsheetml\.sheet|application\/vnd\.ms\-excel\.sheet\.macroenabled\.12|application\/vnd\.ms\-excel\.sheet\.binary\.macroenabled\.12|application\/vnd\.openxmlformats\-officedocument\.spreadsheetml\.template|application\/vnd\.ms\-excel\.template\.macroenabled\.12)$/i,
           }),
           new MaxFileSizeValidator({
             maxSize: +process.env.MAXIMUM_FILE_SIZE_IN_BYTES,
@@ -47,9 +49,35 @@ export class UploadFilesController {
     )
     files: Express.Multer.File[],
   ) {
-    const [hosvitalFile, cocoFile] = files;
+    if (files.length !== 2) {
+      throw new HttpException(
+        'Debes cargar exactamente 2 archivos.',
+        HttpStatus.CONFLICT,
+      );
+    }
 
-    return await this.usersService.compareFiles(
+    const [file1, file2] = files;
+
+    const file1Type = this.uploadFilesService.identifyFileType(file1.buffer);
+    const file2Type = this.uploadFilesService.identifyFileType(file2.buffer);
+
+    let hosvitalFile: Express.Multer.File;
+    let cocoFile: Express.Multer.File;
+
+    if (file1Type === 'coco' && file2Type === 'hosvital') {
+      cocoFile = file1;
+      hosvitalFile = file2;
+    } else if (file1Type === 'hosvital' && file2Type === 'coco') {
+      cocoFile = file2;
+      hosvitalFile = file1;
+    } else {
+      throw new HttpException(
+        'Error en los archivos cargados: No se encontró un archivo de Hosvital y uno de Coco.',
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    return await this.uploadFilesService.compareFiles(
       hosvitalFile.buffer,
       cocoFile.buffer,
     );
@@ -59,23 +87,23 @@ export class UploadFilesController {
 
   @Get('/getAllFiles')
   async getAllFiles() {
-    return await this.usersService.getAllFiles();
+    return await this.uploadFilesService.getAllFiles();
   }
 
   @Get('/getFileById/:id')
   async getFileById() {
-    return await this.usersService.getFileById();
+    return await this.uploadFilesService.getFileById();
   }
 
   // PATCH METHODS //
 
   @Patch('/updateFile/:id')
   async updateFile() {
-    return await this.usersService.updateFile();
+    return await this.uploadFilesService.updateFile();
   }
 
   @Patch('/banFiles/:id')
   async banFiles() {
-    return await this.usersService.banFiles();
+    return await this.uploadFilesService.banFiles();
   }
 }
