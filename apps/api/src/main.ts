@@ -19,11 +19,11 @@ async function bootstrap() {
   app.enableCors();
 
   const config = new DocumentBuilder()
-    .setTitle('Fénix')
+    .setTitle('Validación de citas TeleMedicina')
     .setDescription(
-      'Creación de plataforma para reportar casos de riesgos e incidentes clínicos',
+      'Validación de que estén presentes en ambos sistemas las citas agendadas del día, con 2 archivos de Excel.',
     )
-    .setVersion('2.0')
+    .setVersion('1.0')
     .addBearerAuth()
     .build();
 

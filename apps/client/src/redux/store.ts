@@ -3,21 +3,21 @@ import { setupListeners } from "@reduxjs/toolkit/query";
 import { persistReducer } from "redux-persist";
 import storage from "./storage/storage";
 
-import userReducer from "./features/user/userSlice";
+import fileReducer from "./features/file/fileSlice";
 
-import { userApi } from "./apis/user/userApi";
+import { uploadFilesApi } from "./apis/upload_files/uploadFilesApi";
 
 const persistConfig = {
   key: "root",
   version: 1,
   storage,
-  whitelist: ["user"],
+  whitelist: [],
   blacklist: [],
 };
 
 const rootReducer = combineReducers({
-  user: userReducer,
-  [userApi.reducerPath]: userApi.reducer,
+  file: fileReducer,
+  [uploadFilesApi.reducerPath]: uploadFilesApi.reducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -28,7 +28,7 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: false,
       immutableCheck: false,
-    }).concat([userApi.middleware]),
+    }).concat([uploadFilesApi.middleware]),
 });
 
 setupListeners(store.dispatch);
