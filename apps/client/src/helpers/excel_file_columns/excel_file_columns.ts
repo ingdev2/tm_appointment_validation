@@ -30,6 +30,15 @@ export const columnsCoincidences: ColumnConfig<IExcelRows>[] = [
       return a.FECHA_CITA.localeCompare(b.FECHA_CITA);
     },
   },
+  {
+    title: "Hora de Cita",
+    dataIndex: "HORA_CITA",
+    key: "HORA_CITA",
+    width: 10,
+    sorter: (a, b) => {
+      return a.HORA_CITA.localeCompare(b.HORA_CITA);
+    },
+  },
 ];
 
 export const columnsHosvital: ColumnConfig<IExcelRowsHosvital>[] = [
@@ -62,6 +71,15 @@ export const columnsHosvital: ColumnConfig<IExcelRowsHosvital>[] = [
       return a.FECHA_CITA.localeCompare(b.FECHA_CITA);
     },
   },
+  {
+    title: "Hora de Cita",
+    dataIndex: "HORA_CITA",
+    key: "HORA_CITA",
+    width: 10,
+    sorter: (a, b) => {
+      return a.HORA_CITA.localeCompare(b.HORA_CITA);
+    },
+  },
 ];
 
 export const columnsCoco: ColumnConfig<IExcelRowsCoco>[] = [
@@ -92,6 +110,15 @@ export const columnsCoco: ColumnConfig<IExcelRowsCoco>[] = [
     width: 13,
     sorter: (a, b) => {
       return a["Fecha de la Cita"].localeCompare(b["Fecha de la Cita"]);
+    },
+  },
+  {
+    title: "Hora de Cita",
+    dataIndex: "Hora de la Cita",
+    key: "Hora de la Cita",
+    width: 10,
+    sorter: (a, b) => {
+      return a["Hora de la Cita"].localeCompare(b["Hora de la Cita"]);
     },
   },
 ];

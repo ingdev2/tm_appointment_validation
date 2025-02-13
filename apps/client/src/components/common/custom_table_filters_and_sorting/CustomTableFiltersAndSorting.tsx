@@ -28,7 +28,8 @@ type Sorts = GetSingle<Parameters<OnChange>[2]>;
 const CustomTableFiltersAndSorting: React.FC<{
   dataCustomTable: any[];
   columnsCustomTable: ColumnConfig<any>[];
-}> = ({ dataCustomTable, columnsCustomTable }) => {
+  rowKeyCustomTable: string;
+}> = ({ dataCustomTable, columnsCustomTable, rowKeyCustomTable }) => {
   const [searchText, setSearchText] = useState("");
   const [searchedColumn, setSearchedColumn] = useState("");
   const searchInput = useRef<InputRef>(null);
@@ -37,6 +38,11 @@ const CustomTableFiltersAndSorting: React.FC<{
   const [sortedInfo, setSortedInfo] = useState<Sorts>({});
 
   const [pageSize, setPageSize] = useState(7);
+
+  const dataWithKeys = dataCustomTable.map((item) => ({
+    ...item,
+    key: item[rowKeyCustomTable],
+  }));
 
   const handleChange: OnChange = (pagination, filters, sorter) => {
     setFilteredInfo(filters);
@@ -357,9 +363,9 @@ const CustomTableFiltersAndSorting: React.FC<{
           // y: "max-content",
           scrollToFirstRowOnChange: true,
         }}
-        rowKey={(record) => record.id}
         columns={columns}
-        dataSource={dataCustomTable}
+        dataSource={dataWithKeys}
+        key="key"
         onChange={handleChange}
         footer={undefined}
         pagination={{

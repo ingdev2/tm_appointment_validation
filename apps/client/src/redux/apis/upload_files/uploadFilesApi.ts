@@ -15,7 +15,21 @@ export const uploadFilesApi = createApi({
         body: files,
       }),
     }),
+
+    downloadExcel: builder.mutation({
+      query: (results) => ({
+        url: "/downloadExcel",
+        method: "POST",
+        body: results,
+        responseHandler: async (response) => {
+          const blob = await response.blob();
+
+          return window.URL.createObjectURL(blob);
+        },
+      }),
+    }),
   }),
 });
 
-export const { useCompareFilesMutation } = uploadFilesApi;
+export const { useCompareFilesMutation, useDownloadExcelMutation } =
+  uploadFilesApi;

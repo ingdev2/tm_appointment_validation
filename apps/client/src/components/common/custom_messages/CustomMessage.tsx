@@ -1,7 +1,6 @@
-"use client";
++"use client";
 
-import React, { useEffect } from "react";
-
+import React, { useEffect, useRef } from "react";
 import { message as messageAntd } from "antd";
 import { NoticeType } from "antd/es/message/interface";
 
@@ -9,22 +8,24 @@ const CustomMessage: React.FC<{ message: string; typeMessage: NoticeType }> = ({
   message,
   typeMessage,
 }) => {
+  const [messageApi, contextHolder] = messageAntd.useMessage();
+  const shownMessageRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (message) {
-      const template = messageAntd.open({
+    if (message && shownMessageRef.current !== message) {
+      messageApi.open({
+        key: message,
         type: typeMessage,
         content: message,
-        duration: 5,
-        style: { fontSize: 17, marginTop: "2vh" },
+        duration: 7,
+        style: { fontSize: 17 },
       });
 
-      return () => {
-        template();
-      };
+      shownMessageRef.current = message;
     }
-  }, [message, typeMessage]);
+  }, [message, typeMessage, messageApi]);
 
-  return null;
+  return <>{contextHolder}</>;
 };
 
 export default CustomMessage;

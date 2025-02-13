@@ -12,9 +12,11 @@ import {
   Post,
   Query,
   Req,
+  Res,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { UploadFilesService } from '../services/upload_files.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -81,6 +83,42 @@ export class UploadFilesController {
       hosvitalFile.buffer,
       cocoFile.buffer,
     );
+  }
+
+  @Post('/downloadExcel')
+  async downloadExcel(
+    @Body()
+    data: {
+      coincidencias: IExcelRows[];
+      soloEnHO: IExcelRowsHosvital[];
+      soloEnCO: IExcelRowsCoco[];
+    },
+    @Res() res: Response,
+  ) {
+    if (
+      !data ||
+      (!data.coincidencias.length &&
+        !data.soloEnHO.length &&
+        !data.soloEnCO.length)
+    ) {
+      throw new HttpException(
+        'No hay datos para exportar',
+        HttpStatus.NO_CONTENT,
+      );
+    }
+
+    const excelBuffer = this.uploadFilesService.exportToExcel(
+      data.coincidencias,
+      data.soloEnHO,
+      data.soloEnCO,
+    );
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+
+    res.end(excelBuffer);
   }
 
   // GET METHODS //

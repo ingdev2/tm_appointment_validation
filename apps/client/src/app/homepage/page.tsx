@@ -12,7 +12,10 @@ import { FcInfo } from "react-icons/fc";
 
 import { setFile, removeFile } from "@/redux/features/file/fileSlice";
 
-import { useCompareFilesMutation } from "@/redux/apis/upload_files/uploadFilesApi";
+import {
+  useCompareFilesMutation,
+  useDownloadExcelMutation,
+} from "@/redux/apis/upload_files/uploadFilesApi";
 
 import {
   columnsCoco,
@@ -36,6 +39,10 @@ const HomePage: React.FC = () => {
   const filesState = useAppSelector((state) => state.file.files);
 
   const [uploadFiles] = useCompareFilesMutation({
+    fixedCacheKey: "uploadFilesData",
+  });
+
+  const [downloadExcel] = useDownloadExcelMutation({
     fixedCacheKey: "uploadFilesData",
   });
 
@@ -73,6 +80,37 @@ const HomePage: React.FC = () => {
       setErrorMessage(
         "Error al procesar los archivos. Por favor, inténtalo de nuevo."
       );
+      setShowErrorMessage(true);
+    }
+  };
+
+  const handleDownloadExcel = async () => {
+    try {
+      const fileUrl = await downloadExcel(results).unwrap();
+
+      const currentDate = new Date();
+
+      const day = String(currentDate.getDate()).padStart(2, "0");
+      const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+      const year = currentDate.getFullYear();
+
+      const formattedDate = `${day}-${month}-${year}`;
+
+      const fileName = `comparacion_resultados_${formattedDate}.xlsx`;
+
+      const link = document.createElement("a");
+
+      link.href = fileUrl;
+      link.setAttribute("download", fileName);
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error al descargar el archivo Excel:", error);
+      setErrorMessage("Error al descargar el archivo.");
       setShowErrorMessage(true);
     }
   };
@@ -122,11 +160,11 @@ const HomePage: React.FC = () => {
       >
         <Col span={12} style={{ textAlign: "center" }}>
           <h2 style={{ ...titleStyleCss, paddingBottom: "13px" }}>
-            Comparar Documentos
+            Comparación Citas Hosvital Y Coco
           </h2>
 
           <CustomUpload
-            titleCustomUpload="Subir Archivos"
+            titleCustomUpload="Subir Ambos Archivos de Hosvital y Coco"
             fileStatusSetterCustomUpload={setFile}
             removeFileStatusSetterCustomUpload={removeFile}
             maximumNumberOfFiles={Number(
@@ -150,6 +188,7 @@ const HomePage: React.FC = () => {
             onClickCustomButton={handleCompareFiles}
             onMouseDownCustomButton={handleButtonClick}
             disabledCustomButton={filesState.length !== 2}
+            showCustomButton={true}
           />
         </Col>
 
@@ -159,7 +198,7 @@ const HomePage: React.FC = () => {
             style={{
               display: "flex",
               flexFlow: "column wrap",
-              paddingBlock: "22px",
+              paddingBlock: "13px",
             }}
           >
             <Alert
@@ -223,6 +262,7 @@ const HomePage: React.FC = () => {
                     <CustomTableFiltersAndSorting
                       dataCustomTable={results.coincidencias || []}
                       columnsCustomTable={columnsCoincidences}
+                      rowKeyCustomTable="NÚMERO_DOCUMENTO"
                     />
                   ),
                 },
@@ -234,6 +274,7 @@ const HomePage: React.FC = () => {
                     <CustomTableFiltersAndSorting
                       dataCustomTable={results.soloEnHO || []}
                       columnsCustomTable={columnsHosvital}
+                      rowKeyCustomTable="DOCUMENTO"
                     />
                   ),
                 },
@@ -245,6 +286,7 @@ const HomePage: React.FC = () => {
                     <CustomTableFiltersAndSorting
                       dataCustomTable={results.soloEnCO || []}
                       columnsCustomTable={columnsCoco}
+                      rowKeyCustomTable="Número de Identificación"
                     />
                   ),
                 },
@@ -252,6 +294,30 @@ const HomePage: React.FC = () => {
             />
           </Col>
         )}
+
+        <Col
+          span={24}
+          style={{
+            textAlign: "center",
+            paddingTop: "2px",
+            paddingBottom: "13px",
+          }}
+        >
+          <CustomButton
+            titleCustomButton="Descargar Excel de Resultados"
+            typeCustomButton="default"
+            sizeCustomButton="large"
+            styleCustomButton={{
+              borderRadius: "22px",
+              paddingInline: "31px",
+              backgroundColor: "#015E90",
+              color: "#F7F7F7",
+            }}
+            onClickCustomButton={handleDownloadExcel}
+            disabledCustomButton={!results}
+            showCustomButton={results !== null}
+          />
+        </Col>
       </Row>
     </div>
   );

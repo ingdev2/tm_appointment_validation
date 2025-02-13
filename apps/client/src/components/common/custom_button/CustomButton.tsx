@@ -20,6 +20,7 @@ const CustomButton: React.FC<{
   shapeCustomButton?: ButtonShape;
   formCustomButton?: string | undefined;
   disabledCustomButton?: boolean;
+  showCustomButton: boolean;
   onClickCustomButton: () => void;
   onMouseDownCustomButton?: () => void;
 }> = ({
@@ -36,10 +37,11 @@ const CustomButton: React.FC<{
   shapeCustomButton,
   formCustomButton,
   disabledCustomButton,
+  showCustomButton,
   onClickCustomButton,
   onMouseDownCustomButton,
 }) => {
-  return (
+  return showCustomButton ? (
     <Button
       id={idCustomButton}
       className={classNameCustomButton}
@@ -58,7 +60,7 @@ const CustomButton: React.FC<{
     >
       {titleCustomButton}
     </Button>
-  );
+  ) : null;
 };
 
 export default CustomButton;
