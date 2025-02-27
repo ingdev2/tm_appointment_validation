@@ -14,57 +14,56 @@ export class UploadFilesService {
     return headers;
   }
 
-  convertToDate(date: string): string {
-    if (typeof date !== 'string') {
+  convertToDate(date: string | number): string {
+    if (!date) return '';
+
+    if (typeof date === 'number') {
+      const excelDate = new Date((date - 25569) * 86400000);
+      return excelDate.toISOString().split('T')[0];
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return date;
     }
 
     const parts = date.split('/');
-
     if (parts.length === 3) {
-      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+      return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
     }
 
-    return date;
+    console.error(`Formato de fecha desconocido: ${date}`);
+    return '';
   }
 
   convertTo24HourFormat(time: string | number): string {
-    if (time == null) return '';
+    if (!time) return '';
 
     if (typeof time === 'number') {
       const totalMinutes = Math.round(time * 24 * 60);
       const hours = Math.floor(totalMinutes / 60);
       const minutes = totalMinutes % 60;
-
-      return `${hours.toString().padStart(2, '0')}:${minutes
-        .toString()
-        .padStart(2, '0')}`;
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
     }
 
     let normalizedTime = time
       .toString()
       .trim()
-      .toLowerCase()
-      .replace(/a\.?m\.?/gi, 'AM')
-      .replace(/p\.?m\.?/gi, 'PM')
+      .toUpperCase()
       .replace(/\s+/g, ' ')
+      .replace(/A\.?M\.?/gi, 'AM')
+      .replace(/P\.?M\.?/gi, 'PM')
       .replace(/(\d+):(\d+):\d+/, '$1:$2');
 
-    normalizedTime = normalizedTime.replace(/^(\d):/, '0$1:');
-
-    let date = new Date(`2000-01-01 ${normalizedTime}`);
-
-    if (isNaN(date.getTime())) {
-      console.error(`Error al convertir la hora: ${time}`);
-      return '';
+    if (normalizedTime.match(/(AM|PM)/)) {
+      const date = new Date(`2000-01-01 ${normalizedTime}`);
+      if (!isNaN(date.getTime())) {
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+      }
     }
 
-    const localHours = date.getHours();
-    const localMinutes = date.getMinutes();
-
-    return `${localHours.toString().padStart(2, '0')}:${localMinutes
-      .toString()
-      .padStart(2, '0')}`;
+    return normalizedTime;
   }
 
   identifyFileType(fileBuffer: Buffer): 'hosvital' | 'coco' {
@@ -121,65 +120,66 @@ export class UploadFilesService {
 
     const coincidencias: IExcelRows[] = [];
     const soloEnHO: IExcelRowsHosvital[] = [];
-    const soloEnCO: IExcelRowsCoco[] = [];
+    let soloEnCO: IExcelRowsCoco[] = [];
 
     hosvitalFileData.forEach((row1) => {
+      const fechaHosvital = this.convertToDate(row1.FECHA_CITA);
       const horaHosvital = this.convertTo24HourFormat(row1.HORA_CITA);
 
       const match = cocoFileData.find((row2) => {
+        const fechaCoco = this.convertToDate(row2.FECHA_CITA);
         const horaCoco = this.convertTo24HourFormat(row2.HORA_CITA);
-        const esCoincidencia =
-          row1.TIPO_DOCUMENTO === row2.TIPO_DOCUMENTO &&
-          row1.NÚMERO_DOCUMENTO === row2.NÚMERO_DOCUMENTO &&
-          row1.FECHA_CITA === row2.FECHA_CITA &&
-          horaHosvital === horaCoco;
 
-        return esCoincidencia;
+        return (
+          row1.TIPO_DOCUMENTO.trim() === row2.TIPO_DOCUMENTO.trim() &&
+          row1.NÚMERO_DOCUMENTO.toString().trim() ===
+            row2.NÚMERO_DOCUMENTO.toString().trim() &&
+          fechaHosvital === fechaCoco &&
+          horaHosvital === horaCoco
+        );
       });
 
       if (match) {
         coincidencias.push({
           TIPO_DOCUMENTO: row1.TIPO_DOCUMENTO,
           NÚMERO_DOCUMENTO: row1.NÚMERO_DOCUMENTO,
-          FECHA_CITA: row1.FECHA_CITA,
+          FECHA_CITA: fechaHosvital,
           HORA_CITA: horaHosvital,
-          ESPECIALIDAD: row1.ESPECIALIDAD,
+          ESPECIALIDAD: match.ESPECIALIDAD,
         });
       } else {
         soloEnHO.push({
           TIPO_DOCUMENTO: row1.TIPO_DOCUMENTO,
           DOCUMENTO: row1.NÚMERO_DOCUMENTO,
-          FECHA_CITA: row1.FECHA_CITA,
+          FECHA_CITA: fechaHosvital,
           HORA_CITA: horaHosvital,
           DESCRIPCION_ESPECIALIDAD: row1.ESPECIALIDAD,
         });
       }
     });
 
-    cocoFileData.forEach((row2) => {
-      const horaCoco = this.convertTo24HourFormat(row2.HORA_CITA);
+    const documentosCoincidentes = new Set(
+      coincidencias.map(
+        (c) =>
+          `${c.TIPO_DOCUMENTO}-${c.NÚMERO_DOCUMENTO}-${c.FECHA_CITA}-${c.HORA_CITA}`,
+      ),
+    );
 
-      const match = hosvitalFileData.find((row1) => {
-        const horaHosvital = this.convertTo24HourFormat(row1.HORA_CITA);
+    soloEnCO = cocoFileData
+      .filter((row2) => {
+        const fechaCoco = this.convertToDate(row2.FECHA_CITA);
+        const horaCoco = this.convertTo24HourFormat(row2.HORA_CITA);
+        const clave = `${row2.TIPO_DOCUMENTO}-${row2.NÚMERO_DOCUMENTO}-${fechaCoco}-${horaCoco}`;
 
-        return (
-          row1.TIPO_DOCUMENTO === row2.TIPO_DOCUMENTO &&
-          row1.NÚMERO_DOCUMENTO === row2.NÚMERO_DOCUMENTO &&
-          row1.FECHA_CITA === row2.FECHA_CITA &&
-          horaHosvital === horaCoco
-        );
-      });
-
-      if (!match) {
-        soloEnCO.push({
-          'Tipo documento': row2.TIPO_DOCUMENTO,
-          'Número de Identificación': row2.NÚMERO_DOCUMENTO,
-          'Fecha de la Cita': row2.FECHA_CITA,
-          'Hora de la Cita': horaCoco,
-          Servicio: row2.ESPECIALIDAD,
-        });
-      }
-    });
+        return !documentosCoincidentes.has(clave);
+      })
+      .map((row2) => ({
+        'Tipo documento': row2.TIPO_DOCUMENTO,
+        'Número de Identificación': row2.NÚMERO_DOCUMENTO,
+        'Fecha de la Cita': this.convertToDate(row2.FECHA_CITA),
+        'Hora de la Cita': this.convertTo24HourFormat(row2.HORA_CITA),
+        Servicio: row2.ESPECIALIDAD,
+      }));
 
     return { coincidencias, soloEnHO, soloEnCO };
   }
